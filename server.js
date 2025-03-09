@@ -15,10 +15,10 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const pool = new Pool({
-    user: "",
-    host: "localhost",
-    database: "ecommerce_db",
-    password: "",
+    user: "qe6elt",
+    host: "eu-central-1.sql.xata.sh",
+    database: "ecommerce",
+    password: "xau_dGVz78MpNE3nvxcXeUE4Gu6yUMIIyqw90",
     port: 5432,
 });
 
