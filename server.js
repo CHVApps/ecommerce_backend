@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const PORT = 5001;
+
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -201,10 +201,10 @@ function broadcastToAllClients(message) {
         }
     });
 }
+const PORT = process.env.PORT || 5001;
 
-// ✅ (11) Start the Server
 server.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
 
 

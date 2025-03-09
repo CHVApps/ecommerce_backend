@@ -16,5 +16,7 @@ app.use("/api/products", productRoutes); // Register Product Routes
 
 sequelize.sync().then(() => {
   console.log("Database Synced");
-  app.listen(5001, () => console.log("Server running on port 5001"));
+  const port = process.env.PORT;
+  app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
 });
+
