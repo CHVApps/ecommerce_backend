@@ -34,7 +34,7 @@ app.post("/admin-login", async (req, res) => {
 
     try {
         const result = await pool.query(
-            "SELECT * FROM admin_users WHERE username = $1 AND password = $2",
+            "SELECT * FROM public.admin_users WHERE username = $1 AND password = $2",
             [username, password]
         );
 
