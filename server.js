@@ -14,15 +14,27 @@ const wss = new WebSocket.Server({ server });
 app.use(cors());
 app.use(bodyParser.json());
 
+
 const pool = new Pool({
     user: "qe6elt",
     host: "eu-central-1.sql.xata.sh",
     database: "ecommerce",
     password: "xau_dGVz78MpNE3nvxcXeUE4Gu6yUMIIyqw90",
     port: 5432,
+    ssl: {
+        rejectUnauthorized: false, // Disable certificate verification if needed
+    }
 });
 
 let loggedInAdmin = null;
+
+try {
+    const result = await pool.query('SELECT NOW()');
+    console.log('Database connected:', result.rows[0]);
+} catch (error) {
+    console.error('Database connection error:', error);
+}
+
 
 // ✅ (1) Admin Login
 app.post("/admin-login", async (req, res) => {
@@ -46,7 +58,8 @@ app.post("/admin-login", async (req, res) => {
             return res.status(401).json({ status: "error", message: "❌ Invalid Credentials" });
         }
     } catch (error) {
-        return res.status(500).json({ status: "error", message: "❌ Database Error" });
+        console.error('❌ Database Error:', error);
+        return res.status(500).json({ status: "error", message: error.message });
     }
 });
 
