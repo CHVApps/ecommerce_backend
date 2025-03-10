@@ -28,12 +28,17 @@ const pool = new Pool({
 
 let loggedInAdmin = null;
 
-try {
-    const result = await pool.query('SELECT NOW()');
-    console.log('Database connected:', result.rows[0]);
-} catch (error) {
-    console.error('Database connection error:', error);
-}
+const testDatabaseConnection = async () => {
+    try {
+      const result = await pool.query("SELECT NOW()");
+      console.log("[SUCCESS] Database connected at:", result.rows[0].now);
+    } catch (error) {
+      console.error("[ERROR] Database connection failed:", error);
+    }
+  };
+  
+  // Call the function to test the connection
+  testDatabaseConnection();
 
 
 // ✅ (1) Admin Login
