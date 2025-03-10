@@ -1,9 +1,10 @@
 const WebSocket = require("ws");
 
-const wss = new WebSocket.Server({ port: 5001 });
+// Use the same port as the main app
+const PORT = process.env.PORT || 5001;
+const wss = new WebSocket.Server({ port: PORT });
 
-console.log("[INFO] WebSocket Server Running on ws://192.168.167.26:5001");
-
+console.log(`[INFO] WebSocket Server Running on ws://localhost:${PORT}`);
 wss.on("connection", (ws) => {
   console.log("[SUCCESS] WebSocket Client Connected ✅");
 
