@@ -77,8 +77,35 @@ app.get("/total-stock", async (req, res) => {
     }
   });
   
-  app.listen(5000, () => {
-    console.log("Server running on port 5000");
+  
+  app.get("/transactions-today", async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT COUNT(*) AS total_transactions 
+         FROM transactions 
+         WHERE transaction_date >= CURRENT_DATE 
+         AND transaction_date < CURRENT_DATE + INTERVAL '1 day'`
+      );
+      res.json({ totalTransactions: parseInt(result.rows[0].total_transactions) });
+    } catch (err) {
+      console.error("Error fetching transactions:", err.message);
+      res.status(500).json({ error: "Server error: " + err.message });
+    }
+  });
+
+  app.get("/total-sales-today", async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT COALESCE(SUM(total_price), 0) AS total_sales 
+         FROM transactions 
+         WHERE transaction_date >= CURRENT_DATE 
+         AND transaction_date < CURRENT_DATE + INTERVAL '1 day'`
+      );
+      res.json({ totalSales: parseFloat(result.rows[0].total_sales) });
+    } catch (err) {
+      console.error("Error fetching total sales:", err.message);
+      res.status(500).json({ error: "Server error: " + err.message });
+    }
   });
 
 // ✅ (2) Admin Logout
