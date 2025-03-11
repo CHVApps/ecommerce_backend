@@ -19,7 +19,7 @@ const pool = new Pool({
     user: "qe6elt",
     host: "eu-central-1.sql.xata.sh",
     database: "ecommerce",
-    password: "xau_dGVz78MpNE3nvxcXeUE4Gu6yUMIIyqw90",
+    password: "xau_T7ucrLWyhUkxLva4GTcrRH7qnzbmjxgP3",
     port: 5432,
     ssl: {
         rejectUnauthorized: false, // Disable certificate verification if needed
@@ -67,6 +67,19 @@ app.post("/admin-login", async (req, res) => {
         return res.status(500).json({ status: "error", message: error.message });
     }
 });
+// API to get total stock count
+app.get("/total-stock", async (req, res) => {
+    try {
+      const result = await pool.query("SELECT SUM(total_stock) AS total_stock_count FROM products;");
+      res.json({ totalStock: result.rows[0].total_stock_count || 0 });
+    } catch (err) {
+      res.status(500).json({ error: "Server error: " + err.message });
+    }
+  });
+  
+  app.listen(5000, () => {
+    console.log("Server running on port 5000");
+  });
 
 // ✅ (2) Admin Logout
 app.post("/admin-logout", async (req, res) => {
