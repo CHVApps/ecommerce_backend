@@ -161,6 +161,61 @@ app.post("/api/products", async (req, res) => {
     }
 });
 
+app.get("/api/return/:reference_number", async (req, res) => {
+    const { reference_number } = req.params;
+
+    if (!reference_number) {
+        return res.status(400).json({ error: "❌ Reference number is required." });
+    }
+
+    try {
+        console.log(`🔍 Searching for transaction with reference number: ${reference_number}`);
+
+        const result = await pool.query(
+            "SELECT * FROM transactions WHERE reference_number = $1",
+            [reference_number]
+        );
+
+        if (result.rows.length > 0) {
+            const transaction = result.rows[0];
+            const transactionDate = new Date(transaction.transaction_date);
+            const currentDate = new Date();
+            const differenceInDays = Math.floor((currentDate - transactionDate) / (1000 * 60 * 60 * 24));
+
+            // 🔹 Fix: Ensure products are always in JSON format
+            let productsData;
+            try {
+                productsData = JSON.parse(transaction.products);
+            } catch (error) {
+                console.error("🚨 Error parsing products JSON:", error);
+                productsData = [];
+            }
+
+            // 🔹 Check if the return is eligible
+            const isEligibleForReturn = differenceInDays <= 30;
+
+            res.json({
+                status: "success",
+                message: "✅ Transaction found",
+                transaction: {
+                    ...transaction,
+                    products: productsData // Ensure `products` is always an array
+                },
+                isEligibleForReturn: isEligibleForReturn,
+                returnMessage: isEligibleForReturn ? "✅ Eligible for return" : "❌ Return period expired"
+            });
+
+        } else {
+            console.error("❌ No matching transaction found.");
+            res.status(404).json({ error: "❌ No matching transaction found." });
+        }
+    } catch (error) {
+        console.error("🚨 Database error while fetching transaction:", error);
+        res.status(500).json({ error: "🚨 Database error while fetching transaction." });
+    }
+});
+
+
 // ✅ (6) Get All Products
 app.get("/api/products", async (req, res) => {
     try {
