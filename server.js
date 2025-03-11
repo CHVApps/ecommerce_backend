@@ -171,8 +171,12 @@ app.get("/api/return/:reference_number", async (req, res) => {
     try {
         console.log(`🔍 Searching for transaction with reference number: ${reference_number}`);
 
+        // ✅ Cast `products` to JSON directly in the query
         const result = await pool.query(
-            "SELECT * FROM transactions WHERE reference_number = $1",
+            `SELECT id, reference_number, customer_number, total_price, 
+                    products::json AS products, transaction_date 
+             FROM transactions 
+             WHERE reference_number = $1`,
             [reference_number]
         );
 
@@ -182,36 +186,23 @@ app.get("/api/return/:reference_number", async (req, res) => {
             const currentDate = new Date();
             const differenceInDays = Math.floor((currentDate - transactionDate) / (1000 * 60 * 60 * 24));
 
-            // 🔹 Fix: Ensure products are always in JSON format
-            let productsData;
-            try {
-                productsData = JSON.parse(transaction.products);
-            } catch (error) {
-                console.error("🚨 Error parsing products JSON:", error);
-                productsData = [];
-            }
-
-            // 🔹 Check if the return is eligible
+            // ✅ Determine if the transaction is eligible for return
             const isEligibleForReturn = differenceInDays <= 30;
 
             res.json({
                 status: "success",
                 message: "✅ Transaction found",
-                transaction: {
-                    ...transaction,
-                    products: productsData // Ensure `products` is always an array
-                },
-                isEligibleForReturn: isEligibleForReturn,
+                transaction,
+                isEligibleForReturn,
                 returnMessage: isEligibleForReturn ? "✅ Eligible for return" : "❌ Return period expired"
             });
-
         } else {
             console.error("❌ No matching transaction found.");
-            res.status(404).json({ error: "❌ No matching transaction found." });
+            return res.status(404).json({ error: "❌ No matching transaction found." });
         }
     } catch (error) {
         console.error("🚨 Database error while fetching transaction:", error);
-        res.status(500).json({ error: "🚨 Database error while fetching transaction." });
+        return res.status(500).json({ error: "🚨 Database error while fetching transaction." });
     }
 });
 
