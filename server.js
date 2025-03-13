@@ -251,6 +251,61 @@ app.post("/api/store-bill", async (req, res) => {
     }
 });
 
+app.get("/api/products/:barcode", async (req, res) => {
+    const { barcode } = req.params;
+
+    if (!barcode) {
+        return res.status(400).json({ error: "❌ Barcode is required." });
+    }
+
+    try {
+        console.log(`🔍 Searching for product with barcode: ${barcode}`);
+
+        const result = await pool.query("SELECT * FROM products WHERE unique_code = $1", [barcode]);
+
+        if (result.rows.length > 0) {
+            console.log("✅ Product Found:", result.rows[0]);
+            res.json({ status: "success", product: result.rows[0] });
+        } else {
+            console.error("❌ No matching product found.");
+            res.status(404).json({ error: "❌ No matching product found." });
+        }
+    } catch (error) {
+        console.error("🚨 Database error while fetching product:", error);
+        res.status(500).json({ error: "🚨 Database error while fetching product." });
+    }
+});
+
+
+app.put("/api/products/update-price/:barcode", async (req, res) => {
+    const { barcode } = req.params;
+    const { new_price } = req.body;
+
+    if (!barcode || !new_price) {
+        return res.status(400).json({ error: "❌ Barcode and new price are required." });
+    }
+
+    try {
+        console.log(`🔄 Updating price for barcode: ${barcode}`);
+
+        const result = await pool.query(
+            `UPDATE products SET our_price = $1 WHERE unique_code = $2 RETURNING *`,
+            [parseFloat(new_price), barcode]
+        );
+
+        if (result.rowCount > 0) {
+            console.log("✅ Product Price Updated:", result.rows[0]);
+            res.json({ status: "success", message: "✅ Product price updated!", product: result.rows[0] });
+        } else {
+            res.status(404).json({ error: "❌ Product not found." });
+        }
+    } catch (error) {
+        console.error("🚨 Database error while updating product price:", error);
+        res.status(500).json({ error: "🚨 Database error while updating product price." });
+    }
+});
+
+
 
 // ✅ (8) Get All Transactions
 app.get("/api/transactions", async (req, res) => {
