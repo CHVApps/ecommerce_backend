@@ -1,13 +1,13 @@
 const express = require("express");
 const http = require("http");
-const WebSocket = require("ws");
+
 const { Pool } = require("pg");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+
 
 
 
@@ -329,49 +329,7 @@ app.get("/api/transactions", async (req, res) => {
     }
 });
 
-// ✅ (9) WebSocket Server (Handles Barcode Scan & Login Sync)
-wss.on("connection", (ws) => {
-    console.log("✅ WebSocket Connected with a client");
 
-    ws.on("message", async (message) => {
-        try {
-            const data = JSON.parse(message);
-
-            if (data.type === "barcode_scan") {
-                console.log(`📡 Received Barcode from Flutter App: ${data.barcode}`);
-
-                const result = await pool.query("SELECT * FROM products WHERE unique_code = $1", [data.barcode]);
-
-                if (result.rows.length > 0) {
-                    const productDetails = {
-                        status: "success",
-                        message: "✅ Product found and sending to Sales.js",
-                        product: result.rows[0],
-                    };
-
-                    broadcastToAllClients(productDetails);
-                } else {
-                    ws.send(JSON.stringify({ status: "error", message: "❌ Product not found" }));
-                }
-            }
-        } catch (error) {
-            ws.send(JSON.stringify({ status: "error", message: "❌ Invalid data format" }));
-        }
-    });
-
-    ws.on("close", () => {
-        console.log("❌ WebSocket Disconnected");
-    });
-});
-
-// ✅ (10) Function to send messages to all WebSocket clients
-function broadcastToAllClients(message) {
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(message));
-        }
-    });
-}
 const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {
