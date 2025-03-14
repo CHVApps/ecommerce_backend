@@ -37,7 +37,8 @@ const testDatabaseConnection = async () => {
     }
   };
   
-  // Call the function to test the connection
+  
+   // Call the function to test the connection
   testDatabaseConnection();
 
 
