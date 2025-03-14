@@ -58,16 +58,20 @@ app.post("/admin-login", async (req, res) => {
 
         if (result.rows.length > 0) {
             loggedInAdmin = username;
-            broadcastToAllClients({ type: "admin_logged_in", username });
-            return res.json({ status: "success", message: "Login Successful", username });
+            return res.json({ 
+                status: "success", 
+                message: "✅ Login Successful", 
+                username 
+            });
         } else {
             return res.status(401).json({ status: "error", message: "❌ Invalid Credentials" });
         }
     } catch (error) {
-        console.error('❌ Database Error:', error);
-        return res.status(500).json({ status: "error", message: error.message });
+        console.error("🚨 Database Error:", error);
+        return res.status(500).json({ status: "error", message: "🚨 Internal Server Error" });
     }
 });
+
 // API to get total stock count
 app.get("/total-stock", async (req, res) => {
     try {
@@ -112,18 +116,22 @@ app.get("/total-stock", async (req, res) => {
 // ✅ (2) Admin Logout
 app.post("/admin-logout", async (req, res) => {
     loggedInAdmin = null;
-    broadcastToAllClients({ type: "admin_logged_out" });
     return res.json({ status: "success", message: "✅ Admin logged out successfully" });
 });
 
 // ✅ (3) Check Admin Login Status
 app.get("/check-login", async (req, res) => {
     if (loggedInAdmin) {
-        return res.json({ status: "success", message: "✅ Admin already logged in", username: loggedInAdmin });
+        return res.json({ 
+            status: "success", 
+            message: "✅ Admin is already logged in", 
+            username: loggedInAdmin 
+        });
     } else {
         return res.status(401).json({ status: "error", message: "❌ Admin not logged in" });
     }
 });
+
 
 // ✅ (4) Generate a Unique Barcode
 app.post("/api/products/generate-barcode", async (req, res) => {
