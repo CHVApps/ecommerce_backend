@@ -21,6 +21,9 @@ const pool = new Pool({
     database: "ecommerce",
     password: "xau_T7ucrLWyhUkxLva4GTcrRH7qnzbmjxgP3",
     port: 5432,
+    max: 3, // ⬅️ Reduce the maximum connections (try 5, 10, or lower)
+    idleTimeoutMillis: 20000, // ⬅️ Close idle connections after 10 seconds
+    connectionTimeoutMillis: 10000, // ⬅️ Timeout if no connection in 5 seconds
     ssl: {
         rejectUnauthorized: false, // Disable certificate verification if needed
     }
