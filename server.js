@@ -218,26 +218,35 @@ app.get("/api/products", async (req, res) => {
 });
 
 // ✅ (7) Store Confirmed Bill in Database (Now with Stock Update)
+// ✅ Store Confirmed Bill in Database & Update Stock
 app.post("/api/store-bill", async (req, res) => {
     const { customerNumber, totalPrice, products } = req.body;
     const referenceNumber = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-        // 🔹 Step 1: Insert the transaction into the database
+        // 🔹 Step 1: Insert transaction into database
         const transactionResult = await pool.query(
             `INSERT INTO transactions (reference_number, customer_number, total_price, products, transaction_date) 
              VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
             [referenceNumber, customerNumber, totalPrice, JSON.stringify(products)]
         );
 
-        // 🔹 Step 2: Update stock for each purchased product
+        // 🔹 Step 2: Deduct stock from each sold product
         for (const product of products) {
-            await pool.query(
+            const barcode = product.barcode;
+            const quantitySold = product.quantity;
+
+            const stockUpdate = await pool.query(
                 `UPDATE products 
                  SET total_stock = total_stock - $1 
-                 WHERE unique_code = $2 AND total_stock >= $1`,
-                [product.quantity, product.unique_code]
+                 WHERE unique_code = $2 
+                 AND total_stock >= $1 RETURNING total_stock`,
+                [quantitySold, barcode]
             );
+
+            if (stockUpdate.rowCount === 0) {
+                console.warn(`⚠️ Stock update failed for barcode: ${barcode}`);
+            }
         }
 
         res.json({ 
@@ -245,11 +254,13 @@ app.post("/api/store-bill", async (req, res) => {
             message: "✅ Bill stored successfully & stock updated!", 
             transaction: transactionResult.rows[0] 
         });
+
     } catch (error) {
-        console.error("🚨 Database error while storing bill:", error);
+        console.error("🚨 Database error while storing bill & updating stock:", error);
         res.status(500).json({ error: "🚨 Database error while storing bill & updating stock." });
     }
 });
+
 
 app.get("/api/products/:barcode", async (req, res) => {
     const { barcode } = req.params;
